@@ -1,0 +1,5 @@
+production:
+  dialect: mysql
+  datasource: root:password@tcp(sample-db:3306)/sample?charset=utf8mb4&collation=utf8mb4_general_ci&parseTime=true
+  dir: migrations
+  table: migrations

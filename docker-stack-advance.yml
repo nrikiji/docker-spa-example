@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  db:
+    image: mariadb:10.7.1
+    restart: always
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    environment:
+      MARIADB_ROOT_PASSWORD: password
+    volumes:
+      - sample-db-vol:/var/lib/mysql
+    logging:
+      driver: syslog
+      options:
+        syslog-facility: daemon
+        tag: docker-db/{{.Name}}/{{.ID}}
+    networks:
+      - sample-nw
+  proxy:
+    image: nginx
+    restart: always
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf
+    logging:
+      driver: syslog
+      options:
+        syslog-facility: daemon
+        tag: docker-proxy/{{.Name}}/{{.ID}}
+    networks:
+      - sample-nw
+    ports:
+      - 80:80
+    depends_on:
+      - web
+      - api
+  web:
+    image: sample/web:latest
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        syslog-facility: daemon
+        tag: docker-web/{{.Name}}/{{.ID}}
+    deploy:
+      replicas: 2
+    networks:
+      - sample-nw
+  api:
+    image: sample/api:latest
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        syslog-facility: daemon
+        tag: docker-api/{{.Name}}/{{.ID}}
+    deploy:
+      replicas: 2
+    networks:
+      - sample-nw
+    depends_on:
+      - db
+
+volumes:
+  sample-db-vol:
+    external: true
+
+networks:
+  sample-nw:
